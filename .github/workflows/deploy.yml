@@ -24,8 +24,8 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh monitizecode-mapesa@37.1.199.85 << 'EOF'
-            cd /home/monitizecode-mapesa/htdocs/mapesa.monitizecode.com
+          ssh working-scripts-lewin@37.1.199.85 << 'EOF'
+            cd /home/working-scripts-lewin/htdocs/lewin.working-scripts.com
 
             # Clean the working directory
             git reset --hard HEAD
