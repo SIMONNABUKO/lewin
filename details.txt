@@ -1,0 +1,6 @@
+eUg3Kd3JbMk1UffWENR9
+working-scripts-lewin
+
+db:lewin
+user: lewin
+password:SIBB7Uq4jQmYKmGFrQFm

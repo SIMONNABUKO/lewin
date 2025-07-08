@@ -1,0 +1,69 @@
+name: Deploy Mapesa to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add VPS host to known_hosts
+        run: |
+          ssh-keyscan -H 37.1.199.85 >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh working-scripts-lewin@37.1.199.85 << 'EOF'
+            cd /home/working-scripts-lewin/htdocs/lewin.working-scripts.com
+
+            # Clean the working directory
+            git reset --hard HEAD
+            git clean -fd
+
+            # Pull latest changes
+            git pull origin main
+
+            # Install/update dependencies
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+            # Run migrations to ensure database is in sync
+            php artisan migrate --force
+
+            # Clear and cache configurations
+            php artisan config:clear
+            php artisan config:cache
+
+            # Clear and cache routes
+            php artisan route:clear
+            php artisan route:cache
+
+            # Clear and cache views
+            php artisan view:clear
+            php artisan view:cache
+
+            # Set proper permissions
+            chown -R www-data:www-data storage bootstrap/cache
+            find storage -type d -exec chmod 775 {} \;
+            find storage -type f -exec chmod 664 {} \;
+            find bootstrap/cache -type d -exec chmod 775 {} \;
+            find bootstrap/cache -type f -exec chmod 664 {} \;
+
+            # Restart queue workers if using queues
+            #php artisan queue:restart
+
+            # Clear application cache
+            php artisan cache:clear
+
+            echo "Deployment completed successfully!"
+          EOF
